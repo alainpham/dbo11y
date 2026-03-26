@@ -1,0 +1,29 @@
+# ─── Credentials & secrets ────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+grafana/.env.alloy
+grafana/.env.*
+!grafana/.env.*.example
+
+# ─── Node.js ──────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-error.log*
+package-lock.json
+
+# ─── Application logs ─────────────────────────────────────────────────────────
+*.log
+app.log
+k6/k6.log
+
+# ─── OS & editor noise ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ─── Claude Code ──────────────────────────────────────────────────────────────
+.claude/

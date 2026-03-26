@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Farm — Crop Health Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🌾</span>
+        <span>CropHealth Monitor</span>
+      </div>
+      <nav>
+        <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+        <button class="nav-btn" data-view="fields">Fields</button>
+        <button class="nav-btn" data-view="alerts">Alerts</button>
+        <button class="nav-btn" data-view="log">Log Reading</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ─── Dashboard ─── -->
+    <section id="view-dashboard" class="view active">
+      <h2>Overview</h2>
+      <div class="stat-cards" id="stat-cards">
+        <div class="card stat-card"><div class="stat-value" id="stat-farms">—</div><div class="stat-label">Farms</div></div>
+        <div class="card stat-card"><div class="stat-value" id="stat-fields">—</div><div class="stat-label">Fields</div></div>
+        <div class="card stat-card critical"><div class="stat-value" id="stat-critical">—</div><div class="stat-label">Critical Alerts</div></div>
+        <div class="card stat-card warning"><div class="stat-value" id="stat-high">—</div><div class="stat-label">High Alerts</div></div>
+      </div>
+
+      <h2>Field Health Status</h2>
+      <div class="card">
+        <table id="field-health-table">
+          <thead>
+            <tr>
+              <th>Farm</th><th>Field</th><th>Crop</th>
+              <th>Health Score</th><th>NDVI</th><th>Soil Moisture</th>
+              <th>Pest Risk</th><th>Last Reading</th>
+            </tr>
+          </thead>
+          <tbody id="field-health-body">
+            <tr><td colspan="8" class="loading">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Recent Readings</h2>
+      <div class="card">
+        <table id="recent-readings-table">
+          <thead>
+            <tr>
+              <th>Farm / Field</th><th>Health</th><th>NDVI</th>
+              <th>Soil Moisture</th><th>Temp (°C)</th><th>Humidity</th><th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="recent-readings-body">
+            <tr><td colspan="7" class="loading">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─── Fields ─── -->
+    <section id="view-fields" class="view">
+      <div class="section-header">
+        <h2>Fields</h2>
+        <button class="btn btn-primary" id="btn-add-field">+ Add Field</button>
+      </div>
+
+      <div id="add-field-form" class="card form-card hidden">
+        <h3>New Field</h3>
+        <div class="form-grid">
+          <label>Farm
+            <select id="ff-farm-id"></select>
+          </label>
+          <label>Field Name <input type="text" id="ff-name" placeholder="e.g. North Block" /></label>
+          <label>Crop Type <input type="text" id="ff-crop" placeholder="e.g. Wheat" /></label>
+          <label>Area (ha) <input type="number" id="ff-area" step="0.1" /></label>
+          <label>Planting Date <input type="date" id="ff-plant" /></label>
+          <label>Expected Harvest <input type="date" id="ff-harvest" /></label>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="btn-save-field">Save</button>
+          <button class="btn" id="btn-cancel-field">Cancel</button>
+        </div>
+        <p id="ff-error" class="form-error hidden"></p>
+      </div>
+
+      <div class="card">
+        <table>
+          <thead>
+            <tr><th>Farm</th><th>Field</th><th>Crop</th><th>Area (ha)</th><th>Planting</th><th>Harvest</th><th>Action</th></tr>
+          </thead>
+          <tbody id="fields-body">
+            <tr><td colspan="7" class="loading">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─── Alerts ─── -->
+    <section id="view-alerts" class="view">
+      <div class="section-header">
+        <h2>Open Alerts</h2>
+        <label class="toggle-label">
+          <input type="checkbox" id="show-resolved" /> Show resolved
+        </label>
+      </div>
+      <div id="alerts-list">
+        <p class="loading">Loading…</p>
+      </div>
+    </section>
+
+    <!-- ─── Log Reading ─── -->
+    <section id="view-log" class="view">
+      <h2>Log Health Reading</h2>
+      <div class="card form-card">
+        <div class="form-grid">
+          <label>Field
+            <select id="lr-field-id"></select>
+          </label>
+          <label>Health Score (0–100) <input type="number" id="lr-health" min="0" max="100" step="0.1" /></label>
+          <label>NDVI (-1 to 1) <input type="number" id="lr-ndvi" min="-1" max="1" step="0.001" /></label>
+          <label>Soil Moisture (%) <input type="number" id="lr-soil-moisture" min="0" max="100" step="0.1" /></label>
+          <label>Soil pH <input type="number" id="lr-soil-ph" min="0" max="14" step="0.1" /></label>
+          <label>Soil Temp (°C) <input type="number" id="lr-soil-temp" step="0.1" /></label>
+          <label>Air Temp (°C) <input type="number" id="lr-air-temp" step="0.1" /></label>
+          <label>Humidity (%) <input type="number" id="lr-humidity" min="0" max="100" step="0.1" /></label>
+          <label>Rainfall (mm) <input type="number" id="lr-rainfall" min="0" step="0.1" /></label>
+          <label>Pest Risk Level (0–4)
+            <select id="lr-pest-risk">
+              <option value="0">0 — None</option>
+              <option value="1">1 — Low</option>
+              <option value="2">2 — Medium</option>
+              <option value="3">3 — High</option>
+              <option value="4">4 — Critical</option>
+            </select>
+          </label>
+          <label>Disease Risk Level (0–4)
+            <select id="lr-disease-risk">
+              <option value="0">0 — None</option>
+              <option value="1">1 — Low</option>
+              <option value="2">2 — Medium</option>
+              <option value="3">3 — High</option>
+              <option value="4">4 — Critical</option>
+            </select>
+          </label>
+          <label class="full-width">Notes <textarea id="lr-notes" rows="2"></textarea></label>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="btn-submit-reading">Submit Reading</button>
+        </div>
+        <p id="lr-result" class="form-result hidden"></p>
+        <p id="lr-error" class="form-error hidden"></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
