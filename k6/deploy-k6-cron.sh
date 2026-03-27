@@ -60,14 +60,17 @@ CRON_ENTRY="${CRON_SCHEDULE} ${CRON_CMD}"
 CRON_MARKER="# k6-crophealth-traffic"
 
 info "Installing cron job ($CRON_SCHEDULE)…"
-ssh "$HOST" bash <<REMOTE
-set -euo pipefail
 
-# Remove any previous entry for this job, then append the new one
-( crontab -l 2>/dev/null | grep -v "$CRON_MARKER" ; echo "${CRON_ENTRY} ${CRON_MARKER}" ) | crontab -
+# Write the cron file locally and scp it to avoid glob expansion of '*' on the remote shell
+LOCAL_TMP="$(mktemp)"
+ssh "$HOST" 'crontab -l 2>/dev/null | grep -v "k6-crophealth-traffic"' > "$LOCAL_TMP" || true
+echo "${CRON_ENTRY} ${CRON_MARKER}" >> "$LOCAL_TMP"
+scp -q "$LOCAL_TMP" "$HOST:/tmp/k6cron_install"
+rm -f "$LOCAL_TMP"
+ssh "$HOST" 'crontab /tmp/k6cron_install && rm -f /tmp/k6cron_install'
+
 echo "  Cron job installed:"
-crontab -l | grep "$CRON_MARKER"
-REMOTE
+ssh "$HOST" 'crontab -l | grep k6-crophealth-traffic'
 ok "Cron job installed"
 
 # ─── 6. Smoke test — run once immediately ─────────────────────────────────────
