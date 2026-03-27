@@ -128,7 +128,7 @@ else
   USER_EXISTS=$(psql_su -tc "SELECT 1 FROM pg_roles WHERE rolname='$DB_MONITOR_USER';" | tr -d '[:space:]')
   if [ "$USER_EXISTS" != "1" ]; then
     info "Creating monitoring user '$DB_MONITOR_USER'…"
-    psql_su -c "CREATE USER \"$DB_MONITOR_USER\" WITH PASSWORD '$DB_MONITOR_PASS' CONNECTION LIMIT 10;"
+    psql_su -c "CREATE USER \"$DB_MONITOR_USER\" WITH PASSWORD '$DB_MONITOR_PASS' CONNECTION LIMIT 60;"
     ok "User '$DB_MONITOR_USER' created"
   else
     ok "User '$DB_MONITOR_USER' already exists"

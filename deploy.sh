@@ -68,7 +68,7 @@ sudo -u postgres psql -tc \
   "SELECT 1 FROM pg_roles WHERE rolname='$DB_MONITOR_USER'" \
   | grep -q 1 \
   || sudo -u postgres psql -c \
-       "CREATE USER \"$DB_MONITOR_USER\" WITH PASSWORD '$DB_MONITOR_PASS' CONNECTION LIMIT 10;"
+       "CREATE USER \"$DB_MONITOR_USER\" WITH PASSWORD '$DB_MONITOR_PASS' CONNECTION LIMIT 60;"
 
 # ── 3e. Create database (idempotent) ─────────────────────────────────────────
 echo "  Ensuring database '$DB_NAME' exists…"
