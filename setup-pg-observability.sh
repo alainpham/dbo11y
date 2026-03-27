@@ -61,14 +61,14 @@ ok "PostgreSQL $PG_MAJOR — config: $PG_CONF"
 info "Checking shared_preload_libraries…"
 CURRENT_SPL=$(psql_su -tc "SHOW shared_preload_libraries;" | tr -d '[:space:]')
 
-if echo "$CURRENT_SPL" | grep -q "pg_stat_statements"; then
-  ok "pg_stat_statements already in shared_preload_libraries"
+if echo "$CURRENT_SPL" | grep -q "pg_stat_statements" && echo "$CURRENT_SPL" | grep -q "auto_explain"; then
+  ok "pg_stat_statements and auto_explain already in shared_preload_libraries"
 else
-  info "Adding pg_stat_statements to shared_preload_libraries…"
+  info "Setting shared_preload_libraries to pg_stat_statements + auto_explain…"
   if grep -qE "^#?shared_preload_libraries" "$PG_CONF"; then
-    sudo sed -i "s|^#*shared_preload_libraries\s*=.*|shared_preload_libraries = 'pg_stat_statements'|" "$PG_CONF"
+    sudo sed -i "s|^#*shared_preload_libraries\s*=.*|shared_preload_libraries = 'pg_stat_statements,auto_explain'|" "$PG_CONF"
   else
-    echo "shared_preload_libraries = 'pg_stat_statements'" | sudo tee -a "$PG_CONF" > /dev/null
+    echo "shared_preload_libraries = 'pg_stat_statements,auto_explain'" | sudo tee -a "$PG_CONF" > /dev/null
   fi
   ok "shared_preload_libraries updated"
 fi
@@ -94,6 +94,24 @@ ok "track_io_timing = on"
 psql_su -c "ALTER SYSTEM SET track_activity_query_size = 4096;"
 ok "track_activity_query_size = 4096"
 
+# log_line_prefix required by Grafana DB Observability logs_receiver parser
+psql_su -c "ALTER SYSTEM SET log_line_prefix = '%m:%r:%u@%d:[%p]:%l:%e:%s:%v:%x:%c:%q%a';"
+ok "log_line_prefix set for Grafana DB Observability"
+
+# auto_explain — writes explain plans to the log (used by Alloy loki.source.file → logs_receiver)
+# These GUCs are only available after auto_explain is loaded via shared_preload_libraries.
+psql_su -c "ALTER SYSTEM SET auto_explain.log_min_duration = 0;"
+ok "auto_explain.log_min_duration = 0"
+
+psql_su -c "ALTER SYSTEM SET auto_explain.log_analyze = on;"
+ok "auto_explain.log_analyze = on"
+
+psql_su -c "ALTER SYSTEM SET auto_explain.log_buffers = on;"
+ok "auto_explain.log_buffers = on"
+
+psql_su -c "ALTER SYSTEM SET auto_explain.log_format = 'text';"
+ok "auto_explain.log_format = text"
+
 psql_su -c "SELECT pg_reload_conf();" > /dev/null
 ok "Configuration reloaded"
 
@@ -111,7 +129,12 @@ psql_su -c "SELECT name, setting FROM pg_settings
     'shared_preload_libraries',
     'pg_stat_statements.track',
     'track_io_timing',
-    'track_activity_query_size'
+    'track_activity_query_size',
+    'log_line_prefix',
+    'auto_explain.log_min_duration',
+    'auto_explain.log_analyze',
+    'auto_explain.log_buffers',
+    'auto_explain.log_format'
   );"
 
 # ─── 6. Create pg_stat_statements extension in target database ────────────────

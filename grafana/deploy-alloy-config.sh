@@ -58,13 +58,22 @@ sudo chown root:alloy "$DEST_CONFIG"
 sudo chmod 640 "$DEST_CONFIG"
 ok "Config deployed to $DEST_CONFIG"
 
-# ─── Write Postgres DSN secret file (read by local.file in config.alloy) ─────
+# ─── Write Postgres DSN secret files (read by local.file in config.alloy) ────
 PG_SECRET_FILE="/var/lib/alloy/postgres_secret_crophealth"
 info "Writing PostgreSQL DSN secret to $PG_SECRET_FILE…"
 echo -n "${POSTGRES_DSN}" | sudo tee "$PG_SECRET_FILE" > /dev/null
 sudo chown alloy:alloy "$PG_SECRET_FILE"
 sudo chmod 600 "$PG_SECRET_FILE"
-ok "PostgreSQL secret file written"
+ok "PostgreSQL secret file written (crophealth)"
+
+# DSN for the integrations_postgres_exporter — same credentials, postgres database
+PG_SECRET_FILE_PG="/var/lib/alloy/postgres_secret_postgres"
+info "Writing PostgreSQL DSN secret to $PG_SECRET_FILE_PG…"
+PG_DSN_POSTGRES="${POSTGRES_DSN/\/crophealth/\/postgres}"
+echo -n "${PG_DSN_POSTGRES}" | sudo tee "$PG_SECRET_FILE_PG" > /dev/null
+sudo chown alloy:alloy "$PG_SECRET_FILE_PG"
+sudo chmod 600 "$PG_SECRET_FILE_PG"
+ok "PostgreSQL secret file written (postgres)"
 
 # ─── Write environment + flags to Alloy systemd override ─────────────────────
 # CUSTOM_ARGS enables public-preview components (database_observability.postgres).
