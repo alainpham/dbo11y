@@ -197,27 +197,33 @@ database_observability.postgres "postgres_crophealth" {
 loki.relabel "database_observability_postgres_crophealth" {
   forward_to = [loki.write.grafana_cloud_loki.receiver]
 
-  rule {
-    target_label = "instance"
-    replacement  = constants.hostname
-  }
+  // Do NOT override instance or server_id — the component sets these to match
+  // the Prometheus targets (server_id hash, instance = DSN host:port/db).
+  // Overriding instance here would break cross-signal correlation in Grafana Cloud.
   rule {
     target_label = "job"
     replacement  = "integrations/db-o11y"
   }
 }
 
-// Scrape database_observability_connection_info and related metrics directly
-// from the Alloy component API, since the component does not expose a standard
-// prometheus exporter target.
+// Use the targets exported by database_observability.postgres — these already
+// carry the correct server_id, job and instance labels required by Grafana Cloud.
 prometheus.scrape "database_observability_postgres_crophealth" {
-  targets = [{
-    __address__ = "localhost:12345",
-    __metrics_path__ = "/api/v0/component/database_observability.postgres.postgres_crophealth",
-    job      = "integrations/db-o11y",
-    instance = constants.hostname,
-  }]
+  targets    = database_observability.postgres.postgres_crophealth.targets
+  forward_to = [prometheus.relabel.database_observability_postgres_crophealth.receiver]
+}
+
+// The component exports two targets: the db-o11y metrics (job=integrations/db-o11y)
+// and the postgres exporter metrics (job=integrations/postgres). Normalize the
+// exporter target's job label so pg_stat_statements_calls_total and related metrics
+// are queryable under job="integrations/db-o11y" in the DB Observability dashboard.
+prometheus.relabel "database_observability_postgres_crophealth" {
   forward_to = [prometheus.remote_write.metrics_service.receiver]
+
+  rule {
+    target_label = "job"
+    replacement  = "integrations/db-o11y"
+  }
 }
 
 local.file_match "database_observability_postgres_crophealth" {
