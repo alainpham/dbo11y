@@ -73,20 +73,3 @@ echo "  Cron job installed:"
 ssh "$HOST" 'crontab -l | grep k6-crophealth-traffic'
 ok "Cron job installed"
 
-# ─── 6. Smoke test — run once immediately ─────────────────────────────────────
-info "Running a 15-second smoke test…"
-ssh "$HOST" "k6 run --duration=15s --quiet --env BASE_URL=${BASE_URL} ${REMOTE_DIR}/k6/traffic.js" \
-  && ok "Smoke test passed" \
-  || die "Smoke test failed — check the app is running at ${BASE_URL}"
-
-echo ""
-echo "══════════════════════════════════════════════════════"
-echo " k6 background traffic deployed"
-echo "══════════════════════════════════════════════════════"
-echo "  Host     : $HOST"
-echo "  App URL  : $BASE_URL"
-echo "  Schedule : $CRON_SCHEDULE (every 15 min, runs for $K6_DURATION)"
-echo "  Logs     : ssh $HOST 'tail -f $REMOTE_DIR/k6/k6.log'"
-echo ""
-echo "  To remove the cron job:"
-echo "    ssh $HOST 'crontab -l | grep -v k6-crophealth-traffic | crontab -'"
