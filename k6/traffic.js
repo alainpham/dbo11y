@@ -79,7 +79,7 @@ const scenarios = [
     post('/api/readings', {
       field_id:           fieldId,
       health_score:       randomIntBetween(40, 98),
-      ndvi:               parseFloat((Math.random() * 1.4 - 0.2).toFixed(3)),
+      ndvi:               parseFloat((Math.random() * 1.2 - 0.2).toFixed(3)),
       soil_moisture:      randomIntBetween(10, 55),
       soil_ph:            parseFloat((6.0 + Math.random() * 1.5).toFixed(1)),
       soil_temp_c:        randomIntBetween(12, 30),
